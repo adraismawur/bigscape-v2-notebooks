@@ -153,6 +153,10 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("path", type=Path)
 
+    # flag to have folder name be the entire sample name
+    parser.add_argument("-f", "--folder_name_as_sample", action="store_true")
+
+
     args = parser.parse_args()
 
     print("size,sample," + ExecutionTime.print_header())
@@ -161,14 +165,16 @@ if __name__ == "__main__":
 
         for folder in get_folders(path):
             # folder is samplesize_"replicate"_sample
-            parts = folder.name.rsplit("_", maxsplit=2)
 
-            size, _replicate, sample = parts
-            try:
+            if args.folder_name_as_sample:
+                parts = [-1, -1, folder.name]
+                size, _replicate, sample = parts
+            else:
+                parts = folder.name.rsplit("_", maxsplit=2)
+                size, _replicate, sample = parts
+
                 size = int(size)
                 sample = int(sample)
-            except:
-                pass # ignore any problems coverting
 
 
             if len(parts) != 3:
