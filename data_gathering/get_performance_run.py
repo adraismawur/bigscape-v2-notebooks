@@ -3,9 +3,9 @@ from datetime import datetime
 from pathlib import Path
 
 
-def print_profile_matrix_line(version, parts, start):
+def print_profile_matrix_line(version, parts, start, type="MULTI"):
 
-    if parts[1] != "MAIN":
+    if parts[1] != type:
         return
 
     time = datetime.fromisoformat(parts[0])
@@ -23,6 +23,8 @@ if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("v1_folder", type=Path)
     parser.add_argument("v2_folder", type=Path)
+
+    parser.add_argument("--type", default="MULTI")
 
     args = parser.parse_args()
 
@@ -44,7 +46,7 @@ if __name__ == "__main__":
         for line in f:
             parts = line.split(",")
 
-            print_profile_matrix_line("v1", parts, v1_start)
+            print_profile_matrix_line("v1", parts, v1_start, args.type)
 
     
     v2_start: datetime
@@ -57,6 +59,6 @@ if __name__ == "__main__":
         for line in f:
             parts = line.split(",")
 
-            print_profile_matrix_line("v2", parts, v2_start)
+            print_profile_matrix_line("v2", parts, v2_start, args.type)
 
 
