@@ -3,7 +3,7 @@ from datetime import datetime
 from pathlib import Path
 
 
-def print_profile_matrix_line(version, parts, start, type="MULTI"):
+def print_profile_matrix_line(version, parts, start, type="MULTI", adjust_mem_subprocesses=False):
 
     if parts[1] != type:
         return
@@ -14,6 +14,13 @@ def print_profile_matrix_line(version, parts, start, type="MULTI"):
     cpu = float(parts[2])
     processes = int(parts[3])
     mem_used_mb = float(parts[4])
+
+    # there seems to be a difference between the multiprocessing used in v1 vs
+    # v2. in v2, the memory appears accurate on the multi type log, but in v2 this
+    # appears summed for all processes. so we need to adjust this.
+    if adjust_mem_subprocesses:
+        mem_used_mb /= processes
+
     memused_percent = float(parts[5])
 
     print(f"{version},{seconds},{cpu},{processes},{mem_used_mb},{memused_percent}")
@@ -59,6 +66,6 @@ if __name__ == "__main__":
         for line in f:
             parts = line.split(",")
 
-            print_profile_matrix_line("v2", parts, v2_start, args.type)
+            print_profile_matrix_line("v2", parts, v2_start, args.type, True)
 
 
