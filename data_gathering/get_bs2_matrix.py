@@ -161,11 +161,15 @@ if __name__ == "__main__":
 
         for folder in get_folders(path):
             # folder is samplesize_"replicate"_sample
-            parts = folder.name.split("_")
+            parts = folder.name.rsplit("_", maxsplit=2)
 
             size, _replicate, sample = parts
-            size = int(size)
-            sample = int(sample)
+            try:
+                size = int(size)
+                sample = int(sample)
+            except:
+                pass # ignore any problems coverting
+
 
             if len(parts) != 3:
                 parts = ["unknown", "unknown", "unknown"]
