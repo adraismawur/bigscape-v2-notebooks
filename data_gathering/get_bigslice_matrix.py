@@ -107,8 +107,10 @@ if __name__ == "__main__":
     def sort_key(result):
         return result[0]
 
+    results = collate_results(args.path)
+
     print("size,sample," + ExecutionTime.print_header())
 
-    for result in sorted(collate_results(args.path), key=sort_key):
+    for result in sorted(results, key=sort_key):
         str_list = map(str, result)
         print(",".join(str_list))
