@@ -81,8 +81,6 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    print("size,sample," + ExecutionTime.print_header())
-
     def collate_results(path):
 
         for folder in get_folders(path):
@@ -104,10 +102,12 @@ if __name__ == "__main__":
                 yield results
             except:
                 print("Error in folder:" + str(folder))
-                break
+                continue
 
     def sort_key(result):
         return result[0]
+
+    print("size,sample," + ExecutionTime.print_header())
 
     for result in sorted(collate_results(args.path), key=sort_key):
         str_list = map(str, result)
