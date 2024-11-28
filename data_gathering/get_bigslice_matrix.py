@@ -97,8 +97,14 @@ if __name__ == "__main__":
                 parts = ["unknown", "unknown", "unknown"]
             execution_time = get_execution_time(folder)
             # print(execution_time)
-            results = [size, sample, *execution_time.to_seconds()]
-            yield results
+            try:
+
+                results = [size, sample, *execution_time.to_seconds()]
+
+                yield results
+            except:
+                print("Error in folder:" + folder)
+                break
 
     def sort_key(result):
         return result[0]
