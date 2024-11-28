@@ -107,7 +107,7 @@ if __name__ == "__main__":
     def sort_key(result):
         return result[0]
 
-    results = collate_results(args.path)
+    results = list(collate_results(args.path))
 
     print("size,sample," + ExecutionTime.print_header())
 
