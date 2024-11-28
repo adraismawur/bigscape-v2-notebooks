@@ -93,9 +93,9 @@ if __name__ == "__main__":
 
             if len(parts) != 3:
                 parts = ["unknown", "unknown", "unknown"]
-            execution_time = get_execution_time(folder)
-            # print(execution_time)
             try:
+                execution_time = get_execution_time(folder)
+                # print(execution_time)
 
                 results = [size, sample, *execution_time.to_seconds()]
 
