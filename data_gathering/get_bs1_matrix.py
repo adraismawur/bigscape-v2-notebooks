@@ -93,14 +93,14 @@ def get_v1_hmmscan_times(folder: Path):
     # mtime for domtable folder
     domtable_folder = folder / "cache" / "domtable"
 
-    return domtable_folder.stat().st_mtime
+    return datetime.fromtimestamp(domtable_folder.stat().st_mtime)
 
 
 def get_v1_hmmalign_times(folder: Path):
     # mtime for pfd or pfs folder. pfd is fine
     pfd_folder = folder / "cache" / "pfd"
 
-    return pfd_folder.stat().st_mtime
+    return datetime.fromtimestamp(pfd_folder.stat().st_mtime)
 
 
 def get_distance_times(folder: Path):
