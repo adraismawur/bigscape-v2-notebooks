@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
                 yield results
             except:
-                print("Error in folder:" + folder)
+                print("Error in folder:" + str(folder))
                 break
 
     def sort_key(result):
