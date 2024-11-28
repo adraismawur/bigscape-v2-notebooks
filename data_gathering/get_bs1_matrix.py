@@ -90,25 +90,17 @@ def get_v1_start(folder: Path):
 
 
 def get_v1_hmmscan_times(folder: Path):
-    # get folder called domtable
-    # start time is folder creation, end time is last file creation within folder
-
+    # mtime for domtable folder
     domtable_folder = folder / "cache" / "domtable"
 
-    # print(domtable_folder.stat().st_mtime)
-
-    return datetime.fromtimestamp(domtable_folder.stat().st_mtime)
+    return domtable_folder.stat().st_mtime
 
 
 def get_v1_hmmalign_times(folder: Path):
-    # get folder called domains
-    # start time is folder creation, end time is last file creation within folder
+    # mtime for pfd or pfs folder. pfd is fine
+    pfd_folder = folder / "cache" / "pfd"
 
-    domains_folder = folder / "cache" / "domains"
-
-    return datetime.fromtimestamp(
-        max(file.stat().st_mtime for file in domains_folder.iterdir())
-    )
+    return pfd_folder.stat().st_mtime
 
 
 def get_distance_times(folder: Path):
