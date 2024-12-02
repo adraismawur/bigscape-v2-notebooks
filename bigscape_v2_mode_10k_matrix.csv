@@ -1,0 +1,16 @@
+size,sample,start,hmm_scan,hmm_scan_save,hmm_align,hmm_align_save,distance_calc,cc_gen,cc_gen_save,total
+-1,output_v2_Amycolatopsis_proto_core_3,0.0,394.516,40.403,244.069,0.752,730.127,273.305,36.068,2868.202
+-1,output_v2_Amycolatopsis_greedy_2,0.0,382.064,40.915,245.478,0.749,648.306,208.71,25.033,2486.731
+-1,output_v2_Amycolatopsis_greedy_1,0.0,407.779,40.954,241.506,0.758,652.692,205.601,21.349,2461.158
+-1,output_v2_Amycolatopsis_simple_2,0.0,411.491,40.478,245.603,0.77,643.606,209.148,24.005,2525.287
+-1,output_v2_Amycolatopsis_greedy_3,0.0,412.43,40.652,245.683,0.778,661.001,208.517,22.265,2492.183
+-1,output_v2_Amycolatopsis_protocluster_2,0.0,437.259,40.882,246.105,0.772,805.023,270.128,25.721,3004.744
+-1,output_v2_Amycolatopsis_simple_1,0.0,398.508,39.927,240.349,2.134,648.343,207.429,43.389,2497.06
+-1,output_v2_Amycolatopsis_protocluster_1,0.0,407.213,40.272,240.497,0.766,813.252,266.42,27.941,2946.485
+-1,output_v2_Amycolatopsis_proto_core_2,0.0,407.207,41.48,247.653,0.797,732.085,277.624,27.659,2856.337
+-1,output_v2_Amycolatopsis_protocluster_3,0.0,418.027,40.344,243.84,1.629,834.832,269.464,32.362,3005.554
+-1,output_v2_Amycolatopsis_legacy_2,0.0,448.141,41.276,247.224,1.78,645.875,210.409,27.917,2550.839
+-1,output_v2_Amycolatopsis_simple_3,0.0,412.951,40.793,245.698,1.001,665.527,209.03,19.936,2487.364
+-1,output_v2_Amycolatopsis_proto_core_1,0.0,420.508,39.48,239.589,0.743,740.478,274.176,27.45,2875.983
+-1,output_v2_Amycolatopsis_legacy_3,0.0,442.302,40.608,243.888,0.901,633.16,205.468,24.069,2494.691
+-1,output_v2_Amycolatopsis_legacy_1,0.0,507.197,41.194,242.483,0.797,658.631,212.604,20.581,2590.926
