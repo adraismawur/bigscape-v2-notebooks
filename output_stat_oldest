@@ -1,0 +1,8 @@
+  File: lustre/data/bigscape_v2_benchmark/output_v1/50000_partition_1/cache/fasta
+  Size: 4284416   	Blocks: 8392       IO Block: 4096   directory
+Device: 41386bd6h/1094216662d	Inode: 144116317400689677  Links: 2
+Access: (0755/drwxr-xr-x)  Uid: (17504506/drais008)   Gid: (16777729/domain users)
+Access: 2024-11-26 15:53:19.000000000 +0100
+Modify: 2024-10-31 23:46:43.000000000 +0100
+Change: 2024-10-31 23:46:43.000000000 +0100
+ Birth: -
