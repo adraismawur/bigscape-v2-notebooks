@@ -138,13 +138,6 @@ def get_execution_time(result_path: Path):
 
     with open(get_v1_logfile(result_path)) as f:
         for line in f:
-            if line.strip().startswith("generate_network"):
-                # we use the log for this, as there are no files written/modified between the end of distance calculation
-                # and GCF calling that we can use to determine the end of distance calculation
-                # this step does occur after hmmalign, but there is a bit of error between the true end of that and the start
-                # of this step. best we can do
-                execution_time.distance_calc = (execution_time.hmm_align + timedelta(seconds=float(line.split()[-2])))
-
             if line.strip().startswith("Main function took"):
                 execution_time.end = (execution_time.start + timedelta(seconds=float(line.split()[-2])))
                 # we can't determine output generation, so it will be included in gcf calling
