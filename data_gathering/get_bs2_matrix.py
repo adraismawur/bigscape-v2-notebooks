@@ -13,6 +13,7 @@ from dataclasses import dataclass
 @dataclass
 class ExecutionTime:
     start: datetime | float
+    read_files: datetime | float
     hmm_scan: datetime | float
     hmm_scan_save: datetime | float
     hmm_align: datetime | float
@@ -24,6 +25,7 @@ class ExecutionTime:
 
     def __init__(self):
         self.start = None
+        self.read_files = None
         self.hmm_scan = None
         self.hmm_scan_save = None
         self.hmm_align = None
@@ -38,6 +40,7 @@ class ExecutionTime:
         return ",".join(
             [
                 "start",
+                "read_files",
                 "hmm_scan",
                 "hmm_scan_save",
                 "hmm_align",
@@ -52,6 +55,7 @@ class ExecutionTime:
     def to_list(self):
         return [
             self.start,
+            self.read_files,
             self.hmm_scan,
             self.hmm_scan_save,
             self.hmm_align,
@@ -65,7 +69,8 @@ class ExecutionTime:
     def to_seconds(self):
         return [
             (self.start - self.start).total_seconds(),
-            (self.hmm_scan - self.start).total_seconds(),
+            (self.read_files - self.start).total_seconds(),
+            (self.hmm_scan - self.read_files).total_seconds(),
             (self.hmm_scan_save - self.hmm_scan).total_seconds(),
             (self.hmm_align - self.hmm_scan_save).total_seconds(),
             (self.hmm_align_save - self.hmm_align).total_seconds(),
@@ -81,6 +86,7 @@ class ExecutionTime:
                 str,
                 [
                     self.start,
+                    self.read_files,
                     self.hmm_scan,
                     self.hmm_scan_save,
                     self.hmm_align,
@@ -100,7 +106,7 @@ def get_folders(path: Path):
 
 def get_files(folder: Path):
     yield from filter(
-        lambda file: file.suffix == ".log",
+        lambda file: file.suffix == ".log" and "config" not in str(file),
         folder.iterdir(),
     )
 
@@ -119,7 +125,7 @@ def get_execution_time(log_file: Path):
             if log.startswith("Starting BiG-SCAPE"):
                 execution_time.start = parsed_time
 
-            if log.startswith("Loading ") and log.endswith("First task: TASK.HMM_SCAN"):
+            if log.endswith("First task: TASK.HMM_SCAN\n"):
                 execution_time.read_files = parsed_time
 
             if log.startswith("scan done at "):
