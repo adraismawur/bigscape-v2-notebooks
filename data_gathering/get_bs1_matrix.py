@@ -114,14 +114,6 @@ def get_v1_hmmalign_times(folder: Path):
     return datetime.fromtimestamp(pfd_folder.stat().st_mtime)
 
 
-def get_distance_times(folder: Path):
-    # folder called network_files will have subfolders. take the oldest. mtime works here as well
-
-    network_files_folder = folder / "network_files"
-    oldest = sorted(network_files_folder.iterdir(), key=lambda x: x.stat().st_mtime)[0]
-    return datetime.fromtimestamp(oldest.stat().st_mtime)
-
-
 def get_execution_time(result_path: Path):
     execution_time = ExecutionTime()
 
@@ -129,15 +121,21 @@ def get_execution_time(result_path: Path):
     execution_time.read_files = get_v1_read_files(result_path)
     execution_time.hmm_scan = get_v1_hmmscan_times(result_path)
     execution_time.hmm_align = get_v1_hmmalign_times(result_path)
-    execution_time.distance_calc = get_distance_times(result_path)
 
     with open(get_v1_logfile(result_path)) as f:
         for line in f:
+            if line.strip().startswith("generate_network"):
+                # we use the log for this, as there are no files written/modified between the end of distance calculation
+                # and GCF calling that we can use to determine the end of distance calculation
+                execution_time.distance_calc = (execution_time.start + timedelta(seconds=float(line.split()[-2])))
+
             if line.strip().startswith("Main function took"):
                 execution_time.end = (execution_time.start + timedelta(seconds=float(line.split()[-2])))
                 # we can't determine output generation, so it will be included in gcf calling
                 # this is end of distance calculation to end of execution
                 execution_time.cc_gen = execution_time.start + (execution_time.end - execution_time.distance_calc)
+
+
 
     return execution_time
 
