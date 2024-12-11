@@ -135,7 +135,7 @@ def get_execution_time(result_path: Path):
                 execution_time.end = (execution_time.start + timedelta(seconds=float(line.split()[-2])))
                 # we can't determine output generation, so it will be included in gcf calling
                 # this is end of distance calculation to end of the program
-                execution_time.cc_gen = execution_time.start + (execution_time.end - execution_time.distance_calc)
+                execution_time.cc_gen = execution_time.end
 
 
 
