@@ -113,6 +113,19 @@ def get_v1_hmmalign_times(folder: Path):
 
     return datetime.fromtimestamp(pfd_folder.stat().st_mtime)
 
+def get_v1_distance_calc(folder: Path):
+    # after much thought, in mix mode the modify time of the results/network_files/[timestamp]/mix/mix_c0.30.network file
+    # is the better way of measuring this one. the runtime log only reports the execution of the generate_networks function,
+    # but there is more to only that function that is relevant to the distance calculation step
+    
+    network_files_subfolder = folder / "network_files"
+    # just get the first subfolder
+    network_files_result_folder = list(network_files_subfolder.iterdir())[0]
+    # network file will be under that folder / mix / mix_c0.30.network
+    network_file = network_files_result_folder / "mix" / "mix_c0.30.network"
+    # mtime of that
+    return datetime.fromtimestamp(network_file.stat().st_mtime)
+
 
 def get_execution_time(result_path: Path):
     execution_time = ExecutionTime()
@@ -121,6 +134,7 @@ def get_execution_time(result_path: Path):
     execution_time.read_files = get_v1_read_files(result_path)
     execution_time.hmm_scan = get_v1_hmmscan_times(result_path)
     execution_time.hmm_align = get_v1_hmmalign_times(result_path)
+    execution_time.distance_calc = get_v1_distance_calc(result_path)
 
     with open(get_v1_logfile(result_path)) as f:
         for line in f:
