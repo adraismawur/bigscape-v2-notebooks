@@ -13,6 +13,7 @@ from dataclasses import dataclass
 @dataclass
 class ExecutionTime:
     start: datetime | float
+    read_files: datetime | float
     hmm_scan: datetime | float
     hmm_align: datetime | float
     distance_calc: datetime | float
@@ -21,6 +22,7 @@ class ExecutionTime:
 
     def __init__(self):
         self.start = None
+        self.read_files = None
         self.hmm_scan = None
         self.hmm_align = None
         self.distance_calc = None
@@ -32,6 +34,7 @@ class ExecutionTime:
         return ",".join(
             [
                 "start",
+                "read_files",
                 "hmm_scan",
                 "hmm_align",
                 "distance_calc",
@@ -43,6 +46,7 @@ class ExecutionTime:
     def to_list(self):
         return [
             self.start,
+            self.read_files,
             self.hmm_scan,
             self.hmm_align,
             self.distance_calc,
@@ -53,7 +57,8 @@ class ExecutionTime:
     def to_seconds(self):
         return [
             (self.start - self.start).total_seconds(),
-            (self.hmm_scan - self.start).total_seconds(),
+            (self.read_files - self.start).total_seconds(),
+            (self.hmm_scan - self.read_files).total_seconds(),
             (self.hmm_align - self.hmm_scan).total_seconds(),
             (self.distance_calc - self.hmm_align).total_seconds(),
             (self.cc_gen - self.distance_calc).total_seconds(),
@@ -66,6 +71,7 @@ class ExecutionTime:
                 str,
                 [
                     self.start,
+                    self.read_files,
                     self.hmm_scan,
                     self.hmm_align,
                     self.distance_calc,
@@ -85,26 +91,31 @@ def get_v1_logfile(folder: Path):
 
 
 def get_v1_start(folder: Path):
-    # can be based on the creation time of the fasta folder
+    # one of the first things written is parameters.txt under /logs
+    return datetime.fromtimestamp((folder / "logs" / "parameters.txt").stat().st_mtime)
+
+def get_v1_read_files(folder: Path):
+    # fasta folder mtime should be equal to when the last file was written there.
+    # this is done after the data is read in as one of the last steps relevant to input parsing
     return datetime.fromtimestamp((folder / "cache" / "fasta").stat().st_mtime)
 
 
 def get_v1_hmmscan_times(folder: Path):
-    # mtime for domtable folder
+    # mtime for domtable folder. last file in this is the end of this step
     domtable_folder = folder / "cache" / "domtable"
 
     return datetime.fromtimestamp(domtable_folder.stat().st_mtime)
 
 
 def get_v1_hmmalign_times(folder: Path):
-    # mtime for pfd or pfs folder. pfd is fine
+    # mtime for pfd or pfs folder. pfd is fine. last file is end of hmmalign
     pfd_folder = folder / "cache" / "pfd"
 
     return datetime.fromtimestamp(pfd_folder.stat().st_mtime)
 
 
 def get_distance_times(folder: Path):
-    # folder called network_files will have subfolders. take the oldest
+    # folder called network_files will have subfolders. take the oldest. mtime works here as well
 
     network_files_folder = folder / "network_files"
     oldest = sorted(network_files_folder.iterdir(), key=lambda x: x.stat().st_mtime)[0]
@@ -115,7 +126,7 @@ def get_execution_time(result_path: Path):
     execution_time = ExecutionTime()
 
     execution_time.start = get_v1_start(result_path)
-
+    execution_time.read_files = get_v1_read_files(result_path)
     execution_time.hmm_scan = get_v1_hmmscan_times(result_path)
     execution_time.hmm_align = get_v1_hmmalign_times(result_path)
     execution_time.distance_calc = get_distance_times(result_path)
@@ -123,13 +134,10 @@ def get_execution_time(result_path: Path):
     with open(get_v1_logfile(result_path)) as f:
         for line in f:
             if line.strip().startswith("Main function took"):
-                execution_time.end = execution_time.start + timedelta(
-                    0, float(line.split()[-2])
-                )
-            if line.strip().startswith("generate_network took"):
-                execution_time.cc_gen = execution_time.distance_calc + timedelta(
-                    0, float(line.split()[-2])
-                )
+                execution_time.end = (execution_time.start + timedelta(seconds=float(line.split()[-2])))
+                # we can't determine output generation, so it will be included in gcf calling
+                # this is end of distance calculation to end of execution
+                execution_time.cc_gen = execution_time.start + (execution_time.end - execution_time.distance_calc)
 
     return execution_time
 
@@ -155,13 +163,9 @@ if __name__ == "__main__":
             if len(parts) != 3:
                 parts = ["unknown", "unknown", "unknown"]
             execution_time = get_execution_time(folder)
-            # print(execution_time)
-            try:
-                results = [size, sample, *execution_time.to_seconds()]
-                yield results
-            except:
-                # don't care about this error
-                pass
+            print(execution_time)
+            results = [size, sample, *execution_time.to_seconds()]
+            yield results
 
     def sort_key(result):
         return result[0]
