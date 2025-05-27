@@ -58,39 +58,39 @@ class ExecutionTime:
         result = []
 
         if self.start is not None and self.start is not None:
-            result.push((self.start - self.start).total_seconds())
+            result.append((self.start - self.start).total_seconds())
         else:
-            result.push(None)
+            result.append(None)
 
         if self.read_files is not None and self.start is not None:
-            result.push((self.read_files - self.start).total_seconds())
+            result.append((self.read_files - self.start).total_seconds())
         else:
-            result.push(None)
+            result.append(None)
 
         if self.hmm_scan is not None and self.read_files is not None:
-            result.push((self.hmm_scan - self.read_files).total_seconds())
+            result.append((self.hmm_scan - self.read_files).total_seconds())
         else:
-            result.push(None)
+            result.append(None)
 
         if self.hmm_align is not None and self.hmm_scan is not None:
-            result.push((self.hmm_align - self.hmm_scan).total_seconds())
+            result.append((self.hmm_align - self.hmm_scan).total_seconds())
         else:
-            result.push(None)
+            result.append(None)
 
         if self.distance_calc is not None and self.hmm_align is not None:
-            result.push((self.distance_calc - self.hmm_align).total_seconds())
+            result.append((self.distance_calc - self.hmm_align).total_seconds())
         else:
-            result.push(None)
+            result.append(None)
 
         if self.cc_gen is not None and self.distance_calc is not None:
-            result.push((self.cc_gen - self.distance_calc).total_seconds())
+            result.append((self.cc_gen - self.distance_calc).total_seconds())
         else:
-            result.push(None)
+            result.append(None)
 
         if self.end is not None and self.start is not None:
-            result.push((self.end - self.start).total_seconds())
+            result.append((self.end - self.start).total_seconds())
         else:
-            result.push(None)
+            result.append(None)
 
         return result
 
