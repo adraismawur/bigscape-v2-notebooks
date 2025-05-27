@@ -55,15 +55,44 @@ class ExecutionTime:
         ]
 
     def to_seconds(self):
-        return [
-            (self.start - self.start).total_seconds(),
-            (self.read_files - self.start).total_seconds(),
-            (self.hmm_scan - self.read_files).total_seconds(),
-            (self.hmm_align - self.hmm_scan).total_seconds(),
-            (self.distance_calc - self.hmm_align).total_seconds(),
-            (self.cc_gen - self.distance_calc).total_seconds(),
-            (self.end - self.start).total_seconds(),
-        ]
+        result = []
+
+        if self.start is not None and self.start is not None:
+            result.push((self.start - self.start).total_seconds())
+        else:
+            result.push(None)
+
+        if self.read_files is not None and self.start is not None:
+            result.push((self.read_files - self.start).total_seconds())
+        else:
+            result.push(None)
+
+        if self.hmm_scan is not None and self.read_files is not None:
+            result.push((self.hmm_scan - self.read_files).total_seconds())
+        else:
+            result.push(None)
+
+        if self.hmm_align is not None and self.hmm_scan is not None:
+            result.push((self.hmm_align - self.hmm_scan).total_seconds())
+        else:
+            result.push(None)
+
+        if self.distance_calc is not None and self.hmm_align is not None:
+            result.push((self.distance_calc - self.hmm_align).total_seconds())
+        else:
+            result.push(None)
+
+        if self.cc_gen is not None and self.distance_calc is not None:
+            result.push((self.cc_gen - self.distance_calc).total_seconds())
+        else:
+            result.push(None)
+
+        if self.end is not None and self.start is not None:
+            result.push((self.end - self.start).total_seconds())
+        else:
+            result.push(None)
+
+        return result
 
     def __str__(self):
         return ",".join(
@@ -94,6 +123,7 @@ def get_v1_start(folder: Path):
     # one of the first things written is parameters.txt under /logs
     return datetime.fromtimestamp((folder / "logs" / "parameters.txt").stat().st_mtime)
 
+
 def get_v1_read_files(folder: Path):
     # fasta folder mtime should be equal to when the last file was written there.
     # this is done after the data is read in as one of the last steps relevant to input parsing
@@ -113,11 +143,12 @@ def get_v1_hmmalign_times(folder: Path):
 
     return datetime.fromtimestamp(pfd_folder.stat().st_mtime)
 
+
 def get_v1_distance_calc(folder: Path):
     # after much thought, in mix mode the modify time of the results/network_files/[timestamp]/mix/mix_c0.30.network file
     # is the better way of measuring this one. the runtime log only reports the execution of the generate_networks function,
     # but there is more to only that function that is relevant to the distance calculation step
-    
+
     network_files_subfolder = folder / "network_files"
     # just get the first subfolder
     network_files_result_folder = list(network_files_subfolder.iterdir())[0]
@@ -139,12 +170,12 @@ def get_execution_time(result_path: Path):
     with open(get_v1_logfile(result_path)) as f:
         for line in f:
             if line.strip().startswith("Main function took"):
-                execution_time.end = (execution_time.start + timedelta(seconds=float(line.split()[-2])))
+                execution_time.end = execution_time.start + timedelta(
+                    seconds=float(line.split()[-2])
+                )
                 # we can't determine output generation, so it will be included in gcf calling
                 # this is end of distance calculation to end of the program
                 execution_time.cc_gen = execution_time.end
-
-
 
     return execution_time
 
@@ -170,7 +201,7 @@ if __name__ == "__main__":
             if len(parts) != 3:
                 parts = ["unknown", "unknown", "unknown"]
             execution_time = get_execution_time(folder)
-            print(execution_time)
+            # print(execution_time)
             results = [size, sample, *execution_time.to_seconds()]
             yield results
 
