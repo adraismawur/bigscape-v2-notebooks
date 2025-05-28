@@ -52,7 +52,41 @@ def get_js_file(path: Path):
     return js_file
 
 
+
+def get_v1_hmmalign_times(folder: Path):
+    # mtime for pfd or pfs folder. pfd is fine. last file is end of hmmalign
+    pfd_folder = folder / "cache" / "pfd"
+
+    return datetime.fromtimestamp(pfd_folder.stat().st_mtime)
+
+def get_v1_start(folder: Path):
+    # one of the first things written is parameters.txt under /logs
+    return datetime.fromtimestamp((folder / "logs" / "parameters.txt").stat().st_mtime)
+
+def get_v1_distance_calc(folder: Path):
+    # get the mtime of the network file
+    network_files_folder = folder / "network_files"
+    if not network_files_folder.exists():
+        return None
+
+    network_cutoff_folder = next(network_files_folder.iterdir(), None)
+
+    if not network_cutoff_folder or not network_cutoff_folder.is_dir():
+        return None
+
+    mix_folder = network_cutoff_folder / "mix"
+    network_file = mix_folder / "mix_c0.30.network"
+    if not network_file.exists():
+        return None
+    return datetime.fromtimestamp(network_file.stat().st_mtime)
+
+
 def get_subfolder_stats(path: Path):
+    start_time = get_v1_start(path)
+
+    post_hmmalign_time = get_v1_hmmalign_times(path)
+
+    post_distance_calculation = get_v1_distance_calc(path)
 
     # get the creation time of the js file
     js_file = get_js_file(path)
@@ -68,23 +102,7 @@ def get_subfolder_stats(path: Path):
 
     last_modified_time = datetime.fromtimestamp(runtimes_file.stat().st_mtime)
 
-    # get the mtime of the network file
-    network_files_folder = path / "network_files"
-    if not network_files_folder.exists():
-        return None
-
-    network_cutoff_folder = next(network_files_folder.iterdir(), None)
-
-    if not network_cutoff_folder or not network_cutoff_folder.is_dir():
-        return None
-
-    mix_folder = network_cutoff_folder / "mix"
-    network_file = mix_folder / "mix_c0.30.network"
-    if not network_file.exists():
-        return None
-    post_distance_calculation = datetime.fromtimestamp(network_file.stat().st_mtime)
-
-    return [post_distance_calculation, last_modified_time, pre_crash_time]
+    return [start_time, post_hmmalign_time, post_distance_calculation, pre_crash_time, last_modified_time]
 
 
 if __name__ == "__main__":
@@ -103,7 +121,7 @@ if __name__ == "__main__":
 
     stats = []
 
-    print("size,sample,gcf_calling_start,gcf_calling_end,pre_crash_time")
+    print("size,sample,run_start,hmmalign_end,distance_calc_end,pre_crash_time,run_end")
     for subfolder in path.iterdir():
         if not subfolder.is_dir():
             continue
@@ -116,18 +134,23 @@ if __name__ == "__main__":
         )
 
     # sort first by samples, then by replicate
-    stats.sort(key=lambda x: (x[0], x[1]))
+    stats.sort(key=lambda x: (int(x[0]), x[1]))
 
     for stat in stats:
         if stat[2] is None or stat[3] is None:
             continue
 
-        gcf_calling_start = stat[2]
-        gcf_calling_end = stat[3]
-        pre_crash_time = stat[4]
+        run_start = stat[2]
+        hmmalign_end = stat[3]
+        distance_calc_end = stat[4]
+        pre_crash_time = stat[5]
+        end_time = stat[6] 
 
         print(
             f"{stat[0]},{stat[1]},"
-            f"{gcf_calling_start.isoformat()},{gcf_calling_end.isoformat()},"
-            f"{pre_crash_time.isoformat() if pre_crash_time else 'None'}"
+            f"{run_start.isoformat()},"
+            f"{hmmalign_end.isoformat()},"
+            f"{distance_calc_end.isoformat() if distance_calc_end else 'N/A'},"
+            f"{pre_crash_time.isoformat() if pre_crash_time else 'N/A'},"
+            f"{end_time.isoformat() if end_time else 'N/A'}"
         )
