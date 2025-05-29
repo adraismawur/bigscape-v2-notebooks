@@ -25,8 +25,23 @@
 
 from pathlib import Path
 from argparse import ArgumentParser
-from datetime import datetime
+from datetime import datetime, timedelta
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import seaborn as sns
 
+sns.set_theme(style="white")
+
+COLORS = {
+    "bigscape_blue": "#52A3A3",
+    "dark_blue": "#0E75BB",
+    "orange_i_found_on_bigscape_image": "#F7931E",
+    "antismash_red": "#AA0000",
+    "bigslice_grey": "#515154",
+}
+
+mpl.rcParams["svg.fonttype"] = "none"
 
 def get_js_file(path: Path):
     html_networks_folder = path / "html_content" / "networks"
@@ -136,6 +151,11 @@ if __name__ == "__main__":
     # sort first by samples, then by replicate
     stats.sort(key=lambda x: (int(x[0]), x[1]))
 
+    
+    post_crash_estimate_data = []
+    start_50k = None
+    pre_crash_50k = None
+
     for stat in stats:
         if stat[2] is None or stat[3] is None:
             continue
@@ -154,3 +174,74 @@ if __name__ == "__main__":
             f"{pre_crash_time.isoformat() if pre_crash_time else 'N/A'},"
             f"{end_time.isoformat() if end_time else 'N/A'}"
         )
+
+        if int(stat[0]) < 50000:
+            post_crash_time = end_time - pre_crash_time
+            post_crash_estimate_data.append([float(stat[0]), float(post_crash_time.total_seconds())])
+        else:
+            start_50k = run_start
+            pre_crash_50k = pre_crash_time
+
+
+    post_crash_estimate_array = np.array(post_crash_estimate_data)
+
+    # project
+    np.polyfit_coeffs = np.polyfit(
+        post_crash_estimate_array[:, 0],
+        post_crash_estimate_array[:, 1],
+        2,
+    )
+
+    estimate = np.polyval(np.polyfit_coeffs, 50000)
+
+    print(
+        f"Estimated post crash time for 50k samples: {estimate} seconds"
+    )
+
+    estimate_time_span = timedelta(seconds=estimate)
+    estimate_end_time = pre_crash_50k + estimate_time_span
+    estimate_runtime = estimate_end_time - start_50k
+    print(f"Estimated runtime for 50k samples: {estimate_runtime.total_seconds():.0f} seconds")
+
+
+    # calculate R^2
+    residuals = post_crash_estimate_array[:, 1] - np.polyval(np.polyfit_coeffs, post_crash_estimate_array[:, 0])
+    ss_res = np.sum(residuals**2)
+    ss_tot = np.sum((post_crash_estimate_array[:, 1] - np.mean(post_crash_estimate_array[:, 1]))**2)
+    r_squared = 1 - (ss_res / ss_tot)
+    print(f"R^2: {r_squared:.4f}")
+
+    # add the estimate to the data
+    post_crash_estimate_array = np.vstack(
+        [post_crash_estimate_array, [50000, estimate]]
+    )
+    
+    # scatterplot with plot of the fit
+    sns.scatterplot(
+        x=post_crash_estimate_array[:, 0],
+        y=post_crash_estimate_array[:, 1],
+        label="Post crash data",
+    )
+    x_fit = np.linspace(0, 50000, 100)
+    y_fit = np.polyval(np.polyfit_coeffs, x_fit)
+    sns.lineplot(x=x_fit, y=y_fit, label="Fit", color=COLORS["bigscape_blue"])
+    plt.xlabel("Number of samples")
+    plt.ylabel("Post crash time (seconds)")
+    plt.title("Post crash time estimation for Bigscape v1")
+    plt.legend()
+
+    # add text with the estimate
+    plt.text(
+        0.05,
+        0.95,
+        f"R² = {r_squared:.4f}\n",
+        transform=plt.gca().transAxes,
+        fontsize=12,
+        verticalalignment="top",
+        bbox=dict(facecolor="white", alpha=0.5, edgecolor="none"),
+    )
+
+
+    plt.tight_layout()
+    plt.savefig("post_crash_estimation_v1.svg", bbox_inches="tight")
+
