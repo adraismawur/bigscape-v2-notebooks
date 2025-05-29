@@ -149,13 +149,15 @@ if __name__ == "__main__":
         )
 
     # sort first by samples, then by replicate
+    # this is just for printing things in order
     stats.sort(key=lambda x: (int(x[0]), x[1]))
 
-    
+    # data for the estimate later
     post_crash_estimate_data = []
     start_50k = None
     pre_crash_50k = None
 
+    # go through all the stats and print them
     for stat in stats:
         if stat[2] is None or stat[3] is None:
             continue
@@ -175,41 +177,57 @@ if __name__ == "__main__":
             f"{end_time.isoformat() if end_time else 'N/A'}"
         )
 
+        # here we have to calculate the post crash time for everything under 50k samples
         if int(stat[0]) < 50000:
             post_crash_time = end_time - pre_crash_time
             post_crash_estimate_data.append([float(stat[0]), float(post_crash_time.total_seconds())])
+        # for 50k samples, we need to store the start time and pre crash time
         else:
             start_50k = run_start
             pre_crash_50k = pre_crash_time
 
-
+    # convert all to numpy arrays
     post_crash_estimate_array = np.array(post_crash_estimate_data)
 
-    # project
-    np.polyfit_coeffs = np.polyfit(
+    # fit a polynomial to the data
+    p, residuals, rank, singular_values, rcond = np.polyfit(
         post_crash_estimate_array[:, 0],
         post_crash_estimate_array[:, 1],
         2,
+        full=True,
     )
 
+    np.polyfit_coeffs = p
+
+
+    # calculate R^2
+    # sum squares of the residuals
+    ss_res = np.sum(residuals**2)
+    # total sum of squares
+    ss_tot = np.sum((post_crash_estimate_array[:, 1] - np.mean(post_crash_estimate_array[:, 1]))**2)
+    # R^2
+    r_squared = 1 - (ss_res / ss_tot)
+    print(f"R^2: {r_squared:.4f}")
+
+
+    # get the estimated post crash time for 50k samples
     estimate = np.polyval(np.polyfit_coeffs, 50000)
 
     print(
         f"Estimated post crash time for 50k samples: {estimate} seconds"
     )
 
+    # convert the estimate to a timedelta
     estimate_time_span = timedelta(seconds=estimate)
+
+    # add the estimate to the pre crash time
     estimate_end_time = pre_crash_50k + estimate_time_span
+
+    # calculate the total run time by subtracting the estimated end time from the start time
     estimate_runtime = estimate_end_time - start_50k
     print(f"Estimated runtime for 50k samples: {estimate_runtime.total_seconds():.0f} seconds")
 
 
-    # calculate R^2
-    residuals = post_crash_estimate_array[:, 1] - np.polyval(np.polyfit_coeffs, post_crash_estimate_array[:, 0])
-    ss_res = np.sum(residuals**2)
-    ss_tot = np.sum((post_crash_estimate_array[:, 1] - np.mean(post_crash_estimate_array[:, 1]))**2)
-    r_squared = 1 - (ss_res / ss_tot)
-    print(f"R^2: {r_squared:.4f}")
 
     # add the estimate to the data
     post_crash_estimate_array = np.vstack(
@@ -225,8 +243,8 @@ if __name__ == "__main__":
     x_fit = np.linspace(0, 50000, 100)
     y_fit = np.polyval(np.polyfit_coeffs, x_fit)
     sns.lineplot(x=x_fit, y=y_fit, label="Fit", color=COLORS["bigscape_blue"])
-    plt.xlabel("Number of samples")
-    plt.ylabel("Post crash time (seconds)")
+    plt.xlabel("# records")
+    plt.ylabel("Missing runtime (seconds)")
     plt.title("Post crash time estimation for Bigscape v1")
     plt.legend()
 
