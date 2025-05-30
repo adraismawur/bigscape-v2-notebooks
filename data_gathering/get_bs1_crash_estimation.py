@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
     stats = []
 
-    print("size,sample,run_start,hmmalign_end,distance_calc_end,pre_crash_time,run_end")
+    print("size,sample,run_start,distance_calc_end,pre_crash_time,run_end,missing_runtime")
     for subfolder in path.iterdir():
         if not subfolder.is_dir():
             continue
@@ -163,28 +163,28 @@ if __name__ == "__main__":
             continue
 
         run_start = stat[2]
-        hmmalign_end = stat[3]
         distance_calc_end = stat[4]
         pre_crash_time = stat[5]
-        end_time = stat[6] 
-
-        print(
-            f"{stat[0]},{stat[1]},"
-            f"{run_start.isoformat()},"
-            f"{hmmalign_end.isoformat()},"
-            f"{distance_calc_end.isoformat() if distance_calc_end else 'N/A'},"
-            f"{pre_crash_time.isoformat() if pre_crash_time else 'N/A'},"
-            f"{end_time.isoformat() if end_time else 'N/A'}"
-        )
+        end_time = stat[6]
+        missing_runtime = None
 
         # here we have to calculate the post crash time for everything under 50k samples
         if int(stat[0]) < 50000:
-            post_crash_time = end_time - pre_crash_time
-            post_crash_estimate_data.append([float(stat[0]), float(post_crash_time.total_seconds())])
+            missing_runtime = end_time - pre_crash_time
+            post_crash_estimate_data.append([float(stat[0]), float(missing_runtime.total_seconds())])
         # for 50k samples, we need to store the start time and pre crash time
         else:
             start_50k = run_start
             pre_crash_50k = pre_crash_time
+
+        print(
+            f"{stat[0]},{stat[1]},"
+            f"{run_start.isoformat()},"
+            f"{distance_calc_end.isoformat() if distance_calc_end else 'N/A'},"
+            f"{pre_crash_time.isoformat() if pre_crash_time else 'N/A'},"
+            f"{end_time.isoformat() if end_time else 'N/A'},",
+            f"{missing_runtime}"
+        )
 
     # convert all to numpy arrays
     post_crash_estimate_array = np.array(post_crash_estimate_data)
@@ -214,7 +214,7 @@ if __name__ == "__main__":
     estimate = np.polyval(np.polyfit_coeffs, 50000)
 
     print(
-        f"Estimated post crash time for 50k samples: {estimate} seconds"
+        f"Estimated missing run time for 50k samples: {estimate} seconds"
     )
 
     # convert the estimate to a timedelta
@@ -245,7 +245,7 @@ if __name__ == "__main__":
     sns.lineplot(x=x_fit, y=y_fit, label="Fit", color=COLORS["bigscape_blue"])
     plt.xlabel("# records")
     plt.ylabel("Missing runtime (seconds)")
-    plt.title("Post crash time estimation for Bigscape v1")
+    plt.title("Missing time estimation for Bigscape v1")
     plt.legend()
 
     # add text with the estimate
