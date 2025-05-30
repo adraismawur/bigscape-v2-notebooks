@@ -157,6 +157,9 @@ def get_v1_distance_calc(folder: Path):
     # mtime of that
     return datetime.fromtimestamp(network_file.stat().st_mtime)
 
+def get_v1_cc_gen(folder: Path):
+    # just get the mtime of the runtimes.txt under logs
+    return datetime.fromtimestamp(get_v1_logfile(folder).stat().st_mtime)
 
 def get_execution_time(result_path: Path):
     execution_time = ExecutionTime()
@@ -166,6 +169,7 @@ def get_execution_time(result_path: Path):
     execution_time.hmm_scan = get_v1_hmmscan_times(result_path)
     execution_time.hmm_align = get_v1_hmmalign_times(result_path)
     execution_time.distance_calc = get_v1_distance_calc(result_path)
+    execution_time.cc_gen = get_v1_cc_gen(result_path)
 
     with open(get_v1_logfile(result_path)) as f:
         for line in f:
@@ -173,9 +177,6 @@ def get_execution_time(result_path: Path):
                 execution_time.end = execution_time.start + timedelta(
                     seconds=float(line.split()[-2])
                 )
-                # we can't determine output generation, so it will be included in gcf calling
-                # this is end of distance calculation to end of the program
-                execution_time.cc_gen = execution_time.end
 
     return execution_time
 
@@ -197,6 +198,10 @@ if __name__ == "__main__":
             size, _replicate, sample = parts
             size = int(size)
             sample = int(sample)
+
+            # skip 50k
+            if size == 50000:
+                continue
 
             if len(parts) != 3:
                 parts = ["unknown", "unknown", "unknown"]
