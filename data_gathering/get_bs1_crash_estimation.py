@@ -190,11 +190,10 @@ if __name__ == "__main__":
     post_crash_estimate_array = np.array(post_crash_estimate_data)
 
     # fit a polynomial to the data
-    p, residuals, rank, singular_values, rcond = np.polyfit(
+    p = np.polyfit(
         post_crash_estimate_array[:, 0],
         post_crash_estimate_array[:, 1],
         2,
-        full=True,
     )
 
     np.polyfit_coeffs = p
@@ -202,6 +201,8 @@ if __name__ == "__main__":
 
     # calculate R^2
     # sum squares of the residuals
+    residuals = post_crash_estimate_array[:, 1] - np.polyval(np.polyfit_coeffs, post_crash_estimate_array[:, 0])
+
     ss_res = np.sum(residuals**2)
     # total sum of squares
     ss_tot = np.sum((post_crash_estimate_array[:, 1] - np.mean(post_crash_estimate_array[:, 1]))**2)
