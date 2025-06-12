@@ -194,13 +194,14 @@ if __name__ == "__main__":
         run_start_seconds = 0
         distance_calc_end_seconds = (distance_calc_end - run_start).total_seconds()
         pre_crash_time_seconds = (pre_crash_time - run_start).total_seconds()
-        end_time_seconds = (end_time - run_start).total_seconds()
+        end_time_seconds = (end_time - run_start).total_seconds() if end_time is not None else ''
+        missing_runtime_seconds = missing_runtime.total_seconds() if missing_runtime is not None else ''
 
         print(
             f"{stat[0]},{stat[1]},"
-            f"{run_start.isoformat()},"
-            f"{distance_calc_end.isoformat()},"
-            f"{pre_crash_time.isoformat()},"
-            f"{end_time.isoformat()},",
-            f"{missing_runtime if missing_runtime else ''}",
+            f"{run_start_seconds},"
+            f"{distance_calc_end_seconds},"
+            f"{pre_crash_time_seconds},"
+            f"{end_time_seconds},",
+            f"{missing_runtime_seconds}",
         )
