@@ -43,6 +43,7 @@ COLORS = {
 
 mpl.rcParams["svg.fonttype"] = "none"
 
+
 def get_js_file(path: Path):
     html_networks_folder = path / "html_content" / "networks"
     if not html_networks_folder.exists():
@@ -67,16 +68,17 @@ def get_js_file(path: Path):
     return js_file
 
 
-
 def get_v1_hmmalign_times(folder: Path):
     # mtime for pfd or pfs folder. pfd is fine. last file is end of hmmalign
     pfd_folder = folder / "cache" / "pfd"
 
     return datetime.fromtimestamp(pfd_folder.stat().st_mtime)
 
+
 def get_v1_start(folder: Path):
     # one of the first things written is parameters.txt under /logs
     return datetime.fromtimestamp((folder / "logs" / "parameters.txt").stat().st_mtime)
+
 
 def get_v1_distance_calc(folder: Path):
     # get the mtime of the network file
@@ -117,7 +119,13 @@ def get_subfolder_stats(path: Path):
 
     last_modified_time = datetime.fromtimestamp(runtimes_file.stat().st_mtime)
 
-    return [start_time, post_hmmalign_time, post_distance_calculation, pre_crash_time, last_modified_time]
+    return [
+        start_time,
+        post_hmmalign_time,
+        post_distance_calculation,
+        pre_crash_time,
+        last_modified_time,
+    ]
 
 
 if __name__ == "__main__":
@@ -136,7 +144,9 @@ if __name__ == "__main__":
 
     stats = []
 
-    print("size,sample,run_start,distance_calc_end,pre_crash_time,run_end,missing_runtime")
+    print(
+        "size,sample,run_start,distance_calc_end,pre_crash_time,run_end,missing_runtime"
+    )
     for subfolder in path.iterdir():
         if not subfolder.is_dir():
             continue
@@ -171,96 +181,26 @@ if __name__ == "__main__":
         # here we have to calculate the post crash time for everything under 50k samples
         if int(stat[0]) < 50000:
             missing_runtime = end_time - pre_crash_time
-            post_crash_estimate_data.append([float(stat[0]), float(missing_runtime.total_seconds())])
+            post_crash_estimate_data.append(
+                [float(stat[0]), float(missing_runtime.total_seconds())]
+            )
         # for 50k samples, we need to store the start time and pre crash time
         else:
             start_50k = run_start
             pre_crash_50k = pre_crash_time
+            end_time = None
+
+        # convert everything to seconds
+        run_start_seconds = 0
+        distance_calc_end_seconds = (distance_calc_end - run_start).total_seconds()
+        pre_crash_time_seconds = (pre_crash_time - run_start).total_seconds()
+        end_time_seconds = (end_time - run_start).total_seconds()
 
         print(
             f"{stat[0]},{stat[1]},"
             f"{run_start.isoformat()},"
-            f"{distance_calc_end.isoformat() if distance_calc_end else 'N/A'},"
-            f"{pre_crash_time.isoformat() if pre_crash_time else 'N/A'},"
-            f"{end_time.isoformat() if end_time else 'N/A'},",
-            f"{missing_runtime}"
+            f"{distance_calc_end.isoformat()},"
+            f"{pre_crash_time.isoformat()},"
+            f"{end_time.isoformat()},",
+            f"{missing_runtime if missing_runtime else ''}",
         )
-
-    # convert all to numpy arrays
-    post_crash_estimate_array = np.array(post_crash_estimate_data)
-
-    # fit a polynomial to the data
-    p = np.polyfit(
-        post_crash_estimate_array[:, 0],
-        post_crash_estimate_array[:, 1],
-        2,
-    )
-
-    np.polyfit_coeffs = p
-
-
-    # calculate R^2
-    # sum squares of the residuals
-    residuals = post_crash_estimate_array[:, 1] - np.polyval(np.polyfit_coeffs, post_crash_estimate_array[:, 0])
-
-    ss_res = np.sum(residuals**2)
-    # total sum of squares
-    ss_tot = np.sum((post_crash_estimate_array[:, 1] - np.mean(post_crash_estimate_array[:, 1]))**2)
-    # R^2
-    r_squared = 1 - (ss_res / ss_tot)
-    print(f"R^2: {r_squared:.4f}")
-
-
-    # get the estimated post crash time for 50k samples
-    estimate = np.polyval(np.polyfit_coeffs, 50000)
-
-    print(
-        f"Estimated missing run time for 50k samples: {estimate} seconds"
-    )
-
-    # convert the estimate to a timedelta
-    estimate_time_span = timedelta(seconds=estimate)
-
-    # add the estimate to the pre crash time
-    estimate_end_time = pre_crash_50k + estimate_time_span
-
-    # calculate the total run time by subtracting the estimated end time from the start time
-    estimate_runtime = estimate_end_time - start_50k
-    print(f"Estimated runtime for 50k samples: {estimate_runtime.total_seconds():.0f} seconds")
-
-
-
-    # add the estimate to the data
-    post_crash_estimate_array = np.vstack(
-        [post_crash_estimate_array, [50000, estimate]]
-    )
-    
-    # scatterplot with plot of the fit
-    sns.scatterplot(
-        x=post_crash_estimate_array[:, 0],
-        y=post_crash_estimate_array[:, 1],
-        label="Post crash data",
-    )
-    x_fit = np.linspace(0, 50000, 100)
-    y_fit = np.polyval(np.polyfit_coeffs, x_fit)
-    sns.lineplot(x=x_fit, y=y_fit, label="Fit", color=COLORS["bigscape_blue"])
-    plt.xlabel("# records")
-    plt.ylabel("Missing runtime (seconds)")
-    plt.title("Missing time estimation for Bigscape v1")
-    plt.legend()
-
-    # add text with the estimate
-    plt.text(
-        0.05,
-        0.95,
-        f"R² = {r_squared:.4f}\n",
-        transform=plt.gca().transAxes,
-        fontsize=12,
-        verticalalignment="top",
-        bbox=dict(facecolor="white", alpha=0.5, edgecolor="none"),
-    )
-
-
-    plt.tight_layout()
-    plt.savefig("post_crash_estimation_v1.svg", bbox_inches="tight")
-
