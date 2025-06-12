@@ -25,23 +25,7 @@
 
 from pathlib import Path
 from argparse import ArgumentParser
-from datetime import datetime, timedelta
-import numpy as np
-import matplotlib as mpl
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-sns.set_theme(style="white")
-
-COLORS = {
-    "bigscape_blue": "#52A3A3",
-    "dark_blue": "#0E75BB",
-    "orange_i_found_on_bigscape_image": "#F7931E",
-    "antismash_red": "#AA0000",
-    "bigslice_grey": "#515154",
-}
-
-mpl.rcParams["svg.fonttype"] = "none"
+from datetime import datetime
 
 
 def get_js_file(path: Path):
@@ -194,8 +178,12 @@ if __name__ == "__main__":
         run_start_seconds = 0
         distance_calc_end_seconds = (distance_calc_end - run_start).total_seconds()
         pre_crash_time_seconds = (pre_crash_time - run_start).total_seconds()
-        end_time_seconds = (end_time - run_start).total_seconds() if end_time is not None else ''
-        missing_runtime_seconds = missing_runtime.total_seconds() if missing_runtime is not None else ''
+        end_time_seconds = (
+            (end_time - run_start).total_seconds() if end_time is not None else ""
+        )
+        missing_runtime_seconds = (
+            missing_runtime.total_seconds() if missing_runtime is not None else ""
+        )
 
         print(
             f"{stat[0]},{stat[1]},"
