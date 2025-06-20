@@ -76,7 +76,7 @@ class ExecutionTime:
             (self.hmm_align_save - self.hmm_align).total_seconds(),
             (self.distance_calc - self.hmm_align_save).total_seconds(),
             (self.cc_gen - self.distance_calc).total_seconds(),
-            (self.cc_gen_save - self.cc_gen).total_seconds(),
+            (self.end - self.cc_gen).total_seconds(),
             (self.end - self.start).total_seconds(),
         ]
 
@@ -162,7 +162,6 @@ if __name__ == "__main__":
     # flag to have folder name be the entire sample name
     parser.add_argument("-f", "--folder_name_as_sample", action="store_true")
 
-
     args = parser.parse_args()
 
     print("size,sample," + ExecutionTime.print_header())
@@ -181,7 +180,6 @@ if __name__ == "__main__":
 
                 size = int(size)
                 sample = int(sample)
-
 
             if len(parts) != 3:
                 parts = ["unknown", "unknown", "unknown"]
